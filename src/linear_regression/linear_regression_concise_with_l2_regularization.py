@@ -15,11 +15,32 @@ class LinearRegression(nn.Module):
         return self.net(X)
 
     def loss(self, y_hat, y):
+        # Loss method is correct - in higher-level API L2 penalty / weight decay
+        # is set in torch.optim.SGD, see configure_optimizers method below,
+        # and L2 penalty is not added in loss() method
         return self.loss_fn(y_hat, y)
 
+    # def configure_optimizers(self):
+    #     self.optimizer = torch.optim.SGD(
+    #         self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+    #     )
+    # ^^ If upper configure_optimizers method were used, the L2 penalty
+    # would also be applied to the bias term, which is often not desired
+
     def configure_optimizers(self):
+        decay, no_decay = [], []
+        for name, param in self.named_parameters():
+            if "bias" in name:  # Excludes bias from L2 penalty / weight decay
+                no_decay.append(param)
+            else:
+                decay.append(param)
+
         self.optimizer = torch.optim.SGD(
-            self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+            [
+                {"params": decay, "weight_decay": self.weight_decay},
+                {"params": no_decay, "weight_decay": 0.0},
+            ],
+            lr=self.lr,
         )
 
 
