@@ -3,12 +3,13 @@ from torch import nn
 
 
 class LinearRegression(nn.Module):
-    def __init__(self, lr, loss_fn):
+    def __init__(self, lr, loss_fn, weight_decay=0):
         super().__init__()
         self.net = nn.LazyLinear(1)
         self.lr = lr
         self.loss_fn = loss_fn
         self.optimizer = None
+        self.weight_decay = weight_decay  # 0, without L2 regularization
 
     def forward(self, X):
         return self.net(X)
@@ -17,7 +18,9 @@ class LinearRegression(nn.Module):
         return self.loss_fn(y_hat, y)
 
     def configure_optimizers(self):
-        self.optimizer = torch.optim.SGD(self.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.SGD(
+            self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
 
 
 def train(model, X, y, epochs=20):
