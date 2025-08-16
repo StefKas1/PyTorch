@@ -6,16 +6,22 @@ from torch.utils.data import DataLoader, TensorDataset
 # Linear Regression Model
 # ---------------------------
 class LinearRegression:
-    def __init__(self, size):
+    def __init__(self, size, l2_lambda=0):
         self.w = torch.normal(mean=0, std=0.01, size=size, requires_grad=True)
         self.b = torch.zeros(1, requires_grad=True)
+        self.l2_lambda = l2_lambda  # 0, without L2 regularization
 
     def forward(self, X):
         return torch.matmul(X, self.w) + self.b
 
     def loss(self, y, y_hat):
         squared_error = (y - y_hat) ** 2 / 2
-        return squared_error.mean()
+        mse = squared_error.mean()
+
+        # Adds regularization / weight decay
+        l2_penalty = (self.l2_lambda / 2) * torch.sum(self.w**2)
+
+        return mse + l2_penalty
 
     @property
     def parameters(self):
